@@ -73,7 +73,7 @@ dotnet run -c Release
 ### Требования
 
 - Docker
-- Минимум 20GB RAM для контейнера
+- Минимум 20GB RAM для контейнера (для стека 5GB + OS overhead + .NET runtime)
 
 ---
 
@@ -106,7 +106,7 @@ public readonly ref struct BigSpan
         {
             if (index >= Length) 
                 throw new IndexOutOfRangeException(
-                    $"Index {index} is out of range [0, {Length})");
+                    $"Index {index} is out of range. Valid range is 0 to {Length - 1}");
             return ref *(_base + (nuint)index);
         }
     }
