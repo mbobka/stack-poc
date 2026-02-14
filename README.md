@@ -37,15 +37,22 @@ Proof-of-concept проекта, демонстрирующего создани
 - постепенный commit (если нужно)
 - `BigSpan + Slice`
 
+### Требования
+
+- .NET 8.0 SDK или выше
+- Windows x64
+
 ### Сборка
 
 ```bash
+cd win
 dotnet build -c Release
 ```
 
 ### Запуск
 
 ```bash
+cd win
 dotnet run -c Release
 ```
 
@@ -62,6 +69,11 @@ dotnet run -c Release
 - `BigSpan + Slice`
 - без stack-grow механизма
 - без glibc зависимостей
+
+### Требования
+
+- Docker
+- Минимум 20GB RAM для контейнера (для стека 5GB + OS overhead + .NET runtime)
 
 ---
 
@@ -89,10 +101,27 @@ public readonly ref struct BigSpan
     }
 
     public ref byte this[ulong index]
-        => ref *(_base + (nuint)index);
+    {
+        get
+        {
+            if (index >= Length) 
+                throw new IndexOutOfRangeException(
+                    $"Index {index} is out of range. Valid range is 0 to {Length - 1}");
+            return ref *(_base + (nuint)index);
+        }
+    }
 
     public Span<byte> Slice(ulong offset, int length)
-        => new Span<byte>(_base + (nuint)offset, length);
+    {
+        if (offset > Length) 
+            throw new ArgumentOutOfRangeException(nameof(offset), 
+                $"Offset {offset} exceeds length {Length}");
+        if ((ulong)length > Length - offset)
+            throw new ArgumentOutOfRangeException(nameof(length),
+                $"Length {length} exceeds remaining bytes {Length - offset}");
+
+        return new Span<byte>(_base + (nuint)offset, length);
+    }
 }
 ```
 
