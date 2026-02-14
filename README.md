@@ -22,7 +22,7 @@ Proof-of-concept проекта, демонстрирующего создани
 /musl
     Program.cs
     stack-poc.csproj
-    Dockerfile
+    dockerfile
 ```
 
 ---
@@ -37,15 +37,22 @@ Proof-of-concept проекта, демонстрирующего создани
 - постепенный commit (если нужно)
 - `BigSpan + Slice`
 
+### Требования
+
+- .NET 8.0 SDK или выше
+- Windows x64
+
 ### Сборка
 
 ```bash
+cd win
 dotnet build -c Release
 ```
 
 ### Запуск
 
 ```bash
+cd win
 dotnet run -c Release
 ```
 
@@ -62,6 +69,11 @@ dotnet run -c Release
 - `BigSpan + Slice`
 - без stack-grow механизма
 - без glibc зависимостей
+
+### Требования
+
+- Docker
+- Минимум 20GB RAM для контейнера
 
 ---
 
@@ -89,10 +101,22 @@ public readonly ref struct BigSpan
     }
 
     public ref byte this[ulong index]
-        => ref *(_base + (nuint)index);
+    {
+        get
+        {
+            if (index >= Length) throw new IndexOutOfRangeException();
+            return ref *(_base + (nuint)index);
+        }
+    }
 
     public Span<byte> Slice(ulong offset, int length)
-        => new Span<byte>(_base + (nuint)offset, length);
+    {
+        if (offset > Length) throw new ArgumentOutOfRangeException(nameof(offset));
+        if ((ulong)length > Length - offset)
+            throw new ArgumentOutOfRangeException(nameof(length));
+
+        return new Span<byte>(_base + (nuint)offset, length);
+    }
 }
 ```
 
