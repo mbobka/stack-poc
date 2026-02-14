@@ -22,7 +22,7 @@ Proof-of-concept проекта, демонстрирующего создани
 /musl
     Program.cs
     stack-poc.csproj
-    dockerfile
+    Dockerfile
 ```
 
 ---
@@ -104,16 +104,21 @@ public readonly ref struct BigSpan
     {
         get
         {
-            if (index >= Length) throw new IndexOutOfRangeException();
+            if (index >= Length) 
+                throw new IndexOutOfRangeException(
+                    $"Index {index} is out of range [0, {Length})");
             return ref *(_base + (nuint)index);
         }
     }
 
     public Span<byte> Slice(ulong offset, int length)
     {
-        if (offset > Length) throw new ArgumentOutOfRangeException(nameof(offset));
+        if (offset > Length) 
+            throw new ArgumentOutOfRangeException(nameof(offset), 
+                $"Offset {offset} exceeds length {Length}");
         if ((ulong)length > Length - offset)
-            throw new ArgumentOutOfRangeException(nameof(length));
+            throw new ArgumentOutOfRangeException(nameof(length),
+                $"Length {length} exceeds remaining bytes {Length - offset}");
 
         return new Span<byte>(_base + (nuint)offset, length);
     }
